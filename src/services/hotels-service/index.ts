@@ -23,7 +23,7 @@ async function listHotels(userId: number) {
 }
 type HotelsWithRooms = Hotel & { availability?:number , accommodationType?:string}
 async function getHotels(userId: number) {
-  //await listHotels(userId);//TODO:UNCOMMENT
+  await listHotels(userId);
   const hotels:HotelsWithRooms[] = await hotelRepository.findHotels();
   await Promise.all(
     hotels.map(async (o, i) => {
