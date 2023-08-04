@@ -31,14 +31,13 @@ async function paymentProcess(ticketId: number, userId: number, cardData: CardPa
   await verifyTicketAndEnrollment(ticketId, userId);
 
   const ticket = await ticketRepository.findTickeWithTypeById(ticketId);
-
   const paymentData = {
     ticketId,
     value: ticket.TicketType.price,
-    cardIssuer: cardData.issuer,
+    cardIssuer: cardData.issuer || "Mastercard",
     cardLastDigits: cardData.number.toString().slice(-4),
   };
-
+  
   const payment = await paymentRepository.createPayment(ticketId, paymentData);
 
   await ticketRepository.ticketProcessPayment(ticketId);
