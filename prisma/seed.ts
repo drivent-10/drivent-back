@@ -22,7 +22,8 @@ async function main() {
     await prisma.$queryRaw`
         INSERT INTO "TicketType" (name, price, "isRemote", "includesHotel", "createdAt", "updatedAt")
         VALUES ('Online', 100, true, false, NOW(), NOW()),
-               ('Presencial', 250, false, false, NOW(), NOW());
+              ('Presencial', 250, false, false, NOW(), NOW()),
+              ('Presencial', 600, false, true, NOW(), NOW());
     `;
   }
 
@@ -96,7 +97,7 @@ async function main() {
       ],
     });
   }
-  
+
   console.log({ event });
 }
 
