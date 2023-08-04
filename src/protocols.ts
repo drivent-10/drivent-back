@@ -1,6 +1,7 @@
 export type ApplicationError = {
   name: string;
   message: string;
+  type?:string;
 };
 
 export type ViaCEPAddress = {
