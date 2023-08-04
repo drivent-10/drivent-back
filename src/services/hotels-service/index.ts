@@ -18,14 +18,16 @@ async function listHotels(userId: number) {
   //Tem ticket pago isOnline false e includesHotel true
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
 
-  if (!ticket || ticket.status === 'RESERVED' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
-    throw cannotListHotelsError();
+  if (!ticket || ticket.status === 'RESERVED') {
+    throw cannotListHotelsError("unpaid");
+  }
+  else if(ticket.TicketType.isRemote || !ticket.TicketType.includesHotel){
+    throw cannotListHotelsError("unavailable");
   }
 }
 type HotelsWithRooms = Hotel & { availability?: number; accommodationType?: string };
 async function getHotels(userId: number) {
-  // FIXME: uncomment following line
-  // await listHotels(userId);
+  await listHotels(userId);
   const cacheKey = 'hotels';
   const cacheHotels = await redis.get(cacheKey);
   if(cacheHotels) return JSON.parse(cacheHotels);
@@ -55,12 +57,11 @@ async function getHotels(userId: number) {
 
 type HotelRooms = (Room & { _count: { Booking: number }; availability?: number })[];
 async function getHotelRooms(userId: number, hotelId: number) {
-  // FIXME: uncomment following line
-  // await listHotels(userId);
+
+  await listHotels(userId);
   const cacheKey = `hotelId=${hotelId}`;
   const cacheRooms = await redis.get(cacheKey);
   if(cacheRooms) return JSON.parse(cacheRooms);
-
   const rooms: HotelRooms = await hotelRepository.findBooking(hotelId);
 
   if (!rooms) {
