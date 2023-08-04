@@ -71,6 +71,16 @@ async function main() {
       return rooms;
     }
   }
+  await prisma.booking.createMany({
+    data: [
+      { userId: 1, roomId: 20 },
+      { userId: 1, roomId: 16 },
+      { userId: 1, roomId: 10 },
+      { userId: 1, roomId: 7 },
+      { userId: 1, roomId: 14 },
+      { userId: 1, roomId: 16 },
+    ],
+  });
   console.log({ event });
 }
 
