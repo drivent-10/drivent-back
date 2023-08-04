@@ -7,6 +7,7 @@ import { Hotel, Room } from '@prisma/client';
 import roomRepository from '@/repositories/room-repository';
 import createText from '@/utils/hotels-utils';
 import { exclude } from '@/utils/prisma-utils';
+import redis from '@/config/redis';
 
 async function listHotels(userId: number) {
   //Tem enrollment?
@@ -25,6 +26,10 @@ type HotelsWithRooms = Hotel & { availability?: number; accommodationType?: stri
 async function getHotels(userId: number) {
   // FIXME: uncomment following line
   // await listHotels(userId);
+  const cacheKey = 'hotels';
+  const cacheHotels = await redis.get(cacheKey);
+  if(cacheHotels) return JSON.parse(cacheHotels);
+
   const hotels: HotelsWithRooms[] = await hotelRepository.findHotels();
   await Promise.all(
     hotels.map(async (o, i) => {
@@ -44,6 +49,7 @@ async function getHotels(userId: number) {
       //exclude(hotels[i], "createdAt", "updatedAt")
     }),
   );
+  await redis.setEx(cacheKey, 30, JSON.stringify(hotels))
   return hotels;
 }
 
@@ -51,6 +57,10 @@ type HotelRooms = (Room & { _count: { Booking: number }; availability?: number }
 async function getHotelRooms(userId: number, hotelId: number) {
   // FIXME: uncomment following line
   // await listHotels(userId);
+  const cacheKey = `hotelId=${hotelId}`;
+  const cacheRooms = await redis.get(cacheKey);
+  if(cacheRooms) return JSON.parse(cacheRooms);
+
   const rooms: HotelRooms = await hotelRepository.findBooking(hotelId);
 
   if (!rooms) {
@@ -62,6 +72,8 @@ async function getHotelRooms(userId: number, hotelId: number) {
       o.availability = o.capacity - o._count.Booking;
     }),
   );
+
+  await redis.setEx(cacheKey, 30, JSON.stringify(rooms))
   return rooms;
 }
 
