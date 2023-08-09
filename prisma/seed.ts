@@ -157,8 +157,7 @@ async function main() {
       name: 'Atividade Especial',
       startsAt: new Date(0), // Set to epoch time
       endsAt: new Date(0), // Set to epoch time
-    };
-  
+    };  
     singleCapacityActivity.startsAt.setFullYear(2023, 7, 5); // Assuming August 5th
     singleCapacityActivity.startsAt.setHours(startHour);
     singleCapacityActivity.endsAt = new Date(singleCapacityActivity.startsAt.getTime() + 60 * 60 * 1000); // 1 hour duration

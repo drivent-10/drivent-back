@@ -56,7 +56,7 @@ async function ticketProcessPayment(ticketId: number) {
   });
 }
 
-export type CreateTicketParams = Omit<Ticket, "id" | "createdAt" | "updatedAt">
+export type CreateTicketParams = Omit<Ticket, "id" | "createdAt" | "updatedAt" | "activitiesId">
 
 const ticketRepository = {
   findTicketTypes,

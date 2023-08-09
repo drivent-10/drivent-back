@@ -24,6 +24,7 @@ async function listHotels(userId: number) {
   else if(ticket.TicketType.isRemote || !ticket.TicketType.includesHotel){
     throw cannotListHotelsError("unavailable");
   }
+  return ticket
 }
 type HotelsWithRooms = Hotel & { availability?: number; accommodationType?: string };
 async function getHotels(userId: number) {
@@ -81,6 +82,7 @@ async function getHotelRooms(userId: number, hotelId: number) {
 const hotelService = {
   getHotels,
   getHotelRooms,
+  listHotels
 };
 
 export default hotelService;
