@@ -1,11 +1,26 @@
 import { prisma } from "@/config"
+import { Ticket } from "@prisma/client"
 
-export async function getActivities() {
+async function getActivities() {
     return await prisma.activities.findMany()
 }
-
+async function getUserActivity(userTicket:number) {
+    return await prisma.activities.findMany({
+        select:{
+            id: true
+        },
+        where:{
+            ticket: {
+                some:{
+                    id:userTicket
+                }
+            }
+        }
+    })
+}
 const activitiesRepository = {
-    getActivities
+    getActivities,
+    getUserActivity
 }
 
 export default activitiesRepository

@@ -14,6 +14,7 @@ async function getTicketTypes() {
 
 async function getTicketByUserId(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  console.log(enrollment)
   if (!enrollment) {
     throw notFoundError();
   }
