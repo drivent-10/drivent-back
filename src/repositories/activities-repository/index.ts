@@ -2,7 +2,18 @@ import { prisma } from "@/config"
 import { Ticket } from "@prisma/client"
 
 async function getActivities() {
-    return await prisma.activities.findMany()
+    return await prisma.activities.findMany({
+        include:{
+            _count:{
+                select:{
+                    ticket: true
+                }
+            }
+        },
+        orderBy:{
+            id: 'asc'
+        }
+    })
 }
 async function getUserActivity(userTicket:number) {
     return await prisma.activities.findMany({
