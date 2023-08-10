@@ -3,35 +3,53 @@ import { Ticket } from "@prisma/client"
 
 async function getActivities() {
     return await prisma.activities.findMany({
-        include:{
-            _count:{
-                select:{
+        include: {
+            _count: {
+                select: {
                     ticket: true
                 }
             }
         },
-        orderBy:{
+        orderBy: {
             id: 'asc'
         }
     })
 }
-async function getUserActivity(userTicket:number) {
+async function getUserActivity(userTicket: number) {
     return await prisma.activities.findMany({
-        select:{
+        select: {
             id: true
         },
-        where:{
+        where: {
             ticket: {
-                some:{
-                    id:userTicket
+                some: {
+                    id: userTicket
                 }
             }
         }
     })
 }
+async function createUserActivity(activityId: number, ticketId: number) {
+    return await prisma.activities.update({
+        where: { id: activityId },
+        data: {
+            ticket: {
+                connect: { id: ticketId },
+            },
+        },
+    });
+}
+async function getActivityById(activityId: number) {
+    return await prisma.activities.findUnique({
+        where: { id: activityId },
+        include: { ticket: true },
+      });
+}
 const activitiesRepository = {
     getActivities,
-    getUserActivity
+    getUserActivity,
+    createUserActivity,
+    getActivityById
 }
 
 export default activitiesRepository

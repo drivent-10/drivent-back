@@ -3,13 +3,13 @@ import dayjs from 'dayjs';
 
 const prisma = new PrismaClient();
 
-main()
-  .catch((e) => {
-    throw e;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// main()
+//   .catch((e) => {
+//     throw e;
+//   })
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
 
 async function main() {
   let event = await prisma.event.findFirst();
