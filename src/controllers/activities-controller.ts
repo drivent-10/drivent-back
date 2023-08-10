@@ -9,4 +9,10 @@ export async function getActivities(req:AuthenticatedRequest, res:Response){
     return res.status(httpStatus.OK).send(activities)
 }
 
+export async function createUserActivity(req:AuthenticatedRequest, res:Response){
+    const {userId} = req;
+    const {activityId} = req.body; 
+    await activitiesService.createUserActivity(userId, activityId);
+    return res.status(httpStatus.OK).send('Vaga reservada com sucesso.');
+}
 

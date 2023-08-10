@@ -2,6 +2,8 @@ import activitiesRepository from "@/repositories/activities-repository"
 import { Activities } from "@prisma/client"
 import getMinute from "@/utils/activities-utils";
 import hotelService from "../hotels-service";
+import ticketService from "../tickets-service";
+import { conflictError, notFoundError, paymentRequiredError } from "../../errors";
 
 type NewActivities = Activities & { activityTime: number; available: number; }
 type ActivitiesOrganized = {
@@ -30,12 +32,24 @@ async function getActivities(userId:number) {
     })
     return activitiesOrganized
 }
-
-
-
+async function createUserActivity(userId:number, activityId: number){
+    const ticket = await ticketService.getTicketByUserId(userId);
+    const activity = await activitiesRepository.getActivityById(activityId);
+    if (!ticket || !activity) {
+        throw notFoundError();
+    }
+    if (ticket.status !== 'PAID') {
+        throw paymentRequiredError();
+    }
+    if (activity.capacity <= activity.ticket.length) {
+        throw conflictError('Activity is already fully occupied');
+    }
+    return await activitiesRepository.createUserActivity(activityId, ticket.id);
+}
 
 const activitiesService = {
-    getActivities
+    getActivities,
+    createUserActivity
 }
 
 export default activitiesService
