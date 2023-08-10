@@ -4,6 +4,9 @@ import getMinute from "@/utils/activities-utils";
 import hotelService from "../hotels-service";
 import ticketService from "../tickets-service";
 import { conflictError, notFoundError, paymentRequiredError } from "../../errors";
+import enrollmentRepository from "@/repositories/enrollment-repository";
+import ticketRepository from "@/repositories/ticket-repository";
+import { cannotListHotelsError } from "@/errors/cannot-list-hotels-error";
 
 type NewActivities = Activities & { activityTime: number; available: number; }
 type ActivitiesOrganized = {
@@ -13,6 +16,13 @@ type ActivitiesOrganized = {
     userActivities: number[],
 }
 async function getActivities(userId:number) {
+    const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+    if (!enrollment) throw notFoundError();    
+    const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+    if (!ticket) throw notFoundError(); 
+    else if (ticket.status === 'RESERVED') throw cannotListHotelsError("unpaid");
+    else if(ticket.TicketType.isRemote) throw cannotListHotelsError("unavailable");
+
     const activities = await activitiesRepository.getActivities()
     const activitiesOrganized: ActivitiesOrganized= {
         mainAuditorium: [],
@@ -25,8 +35,8 @@ async function getActivities(userId:number) {
         else if(o.local === "Auditório Lateral") activitiesOrganized.sideAuditorium.push({...o, activityTime: Number(o.endsAt.getHours()) - Number(o.startsAt.getHours()) + getMinute(o.endsAt), available:o.capacity - o._count.ticket })
         else activitiesOrganized.workShop.push({...o, activityTime: Number(o.endsAt.getHours()) - Number(o.startsAt.getHours()) + getMinute(o.endsAt), available:o.capacity - o._count.ticket })
     })
-    const userTicket = await hotelService.listHotels(userId)
-    const UserActivity = await activitiesRepository.getUserActivity(userTicket.id)
+
+    const UserActivity = await activitiesRepository.getUserActivity(ticket.id)
     UserActivity.forEach(o =>{
         activitiesOrganized.userActivities.push(o.id)
     })
