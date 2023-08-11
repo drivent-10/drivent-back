@@ -45,11 +45,23 @@ async function getActivityById(activityId: number) {
         include: { ticket: true },
       });
 }
+async function getUserActivities(ticketId: number) {
+    return await prisma.activities.findMany({
+        where: {
+            ticket: {
+                some: {
+                    id: ticketId
+                }
+            }
+        }
+    });
+}
 const activitiesRepository = {
     getActivities,
     getUserActivity,
     createUserActivity,
-    getActivityById
+    getActivityById,
+    getUserActivities
 }
 
 export default activitiesRepository

@@ -24,16 +24,16 @@ async function getActivities(userId:number) {
     else if(ticket.TicketType.isRemote) throw cannotListHotelsError("unavailable");
 
     const activities = await activitiesRepository.getActivities()
-    const activitiesOrganized: ActivitiesOrganized= {
+    const activitiesOrganized: ActivitiesOrganized = {
         mainAuditorium: [],
         sideAuditorium: [],
         workShop: [],
         userActivities: []
     }
-    activities.forEach(o =>{
-        if(o.local === "Auditório Principal") activitiesOrganized.mainAuditorium.push({...o, activityTime: Number(o.endsAt.getHours()) - Number(o.startsAt.getHours()) + getMinute(o.endsAt), available:o.capacity - o._count.ticket})
-        else if(o.local === "Auditório Lateral") activitiesOrganized.sideAuditorium.push({...o, activityTime: Number(o.endsAt.getHours()) - Number(o.startsAt.getHours()) + getMinute(o.endsAt), available:o.capacity - o._count.ticket })
-        else activitiesOrganized.workShop.push({...o, activityTime: Number(o.endsAt.getHours()) - Number(o.startsAt.getHours()) + getMinute(o.endsAt), available:o.capacity - o._count.ticket })
+    activities.forEach(o => {
+        if (o.local === "Auditório Principal") activitiesOrganized.mainAuditorium.push({ ...o, activityTime: Number(o.endsAt.getHours()) - Number(o.startsAt.getHours()) + getMinute(o.endsAt), available: o.capacity - o._count.ticket })
+        else if (o.local === "Auditório Lateral") activitiesOrganized.sideAuditorium.push({ ...o, activityTime: Number(o.endsAt.getHours()) - Number(o.startsAt.getHours()) + getMinute(o.endsAt), available: o.capacity - o._count.ticket })
+        else activitiesOrganized.workShop.push({ ...o, activityTime: Number(o.endsAt.getHours()) - Number(o.startsAt.getHours()) + getMinute(o.endsAt), available: o.capacity - o._count.ticket })
     })
 
     const UserActivity = await activitiesRepository.getUserActivity(ticket.id)
@@ -42,7 +42,7 @@ async function getActivities(userId:number) {
     })
     return activitiesOrganized
 }
-async function createUserActivity(userId:number, activityId: number){
+async function createUserActivity(userId: number, activityId: number) {
     const ticket = await ticketService.getTicketByUserId(userId);
     const activity = await activitiesRepository.getActivityById(activityId);
     if (!ticket || !activity) {
@@ -54,6 +54,16 @@ async function createUserActivity(userId:number, activityId: number){
     if (activity.capacity <= activity.ticket.length) {
         throw conflictError('Activity is already fully occupied');
     }
+    const userActivities = await activitiesRepository.getUserActivities(ticket.id);
+    const conflictingActivity = userActivities.find(
+        (userActivity) =>
+            userActivity.startsAt <= activity.endsAt && userActivity.endsAt >= activity.startsAt
+    );
+
+    if (conflictingActivity) {
+        throw conflictError('User already has an activity scheduled at this time');
+    }
+
     return await activitiesRepository.createUserActivity(activityId, ticket.id);
 }
 
