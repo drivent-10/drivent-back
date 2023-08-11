@@ -1,15 +1,8 @@
-import { PrismaClient, Room,  } from '@prisma/client';
+import { Activities, PrismaClient, Room,  } from '@prisma/client';
 import dayjs from 'dayjs';
 
 const prisma = new PrismaClient();
 
-// main()
-//   .catch((e) => {
-//     throw e;
-//   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
 
 async function main() {
   let event = await prisma.event.findFirst();
@@ -78,6 +71,13 @@ async function main() {
       }
       return rooms;
     }
+  }
+  const user = await prisma.activities.findUnique({
+    where: {id:1}
+  })
+  const findbooking = await prisma.booking.findFirst()
+  if (user && findHotel &&  !findbooking){
+    console.log("oi")
     await prisma.booking.createMany({
       data: [
         { userId: 1, roomId: 20 },
@@ -103,8 +103,8 @@ async function main() {
         { userId: 1, roomId: 28 },
       ],
     });
-  
   }
+  
   const activities = await prisma.activities.findFirst()
 
   if(!activities){
@@ -112,59 +112,67 @@ async function main() {
     const activityTemplates = [
       {
         local: 'Auditório Lateral',
-        capacity: 20,
+        capacities: [20, 30],
+        durations: [1, 1.5, 2],
       },
       {
         local: 'Auditório Principal',
-        capacity: 30,
+        capacities: [20, 30],
+        durations: [1, 1.5, 2],
       },
       {
         local: 'Sala de Workshop',
-        capacity: 20,
+        capacities: [20],
+        durations: [1, 1.5],
       },
     ];
   
     const days = ['Friday', 'Saturday', 'Sunday'];
     const startHour = 9;
-    const durations = [1, 1.5, 2];
   
-    for (const day of days) {
-      for (const template of activityTemplates) {
-        for (const duration of durations) {
-          const startsAt = new Date(0);
-          startsAt.setFullYear(2023, 7, days.indexOf(day) + 5);
-          startsAt.setHours(startHour);
-          const endsAt = new Date(startsAt.getTime() + duration * 60 * 60 * 1000);
-          const capacity = template.capacity === 20 ? 30 : 20;
-          const name = `Atividade ${day} - ${template.local} - ${duration}h`;
+    const maxActivities = 12;
+    const activitiesToCreate: {
+      local: string;
+      capacity: number;
+      name: string;
+      startsAt: Date;
+      endsAt: Date;
+    }[] = [];
   
-          await prisma.activities.create({
-            data: {
-              local: template.local,
-              capacity: capacity,
-              name: name,
-              startsAt: startsAt,
-              endsAt: endsAt,
-            },
-          });
-        }
-      }
+    while (activitiesToCreate.length < maxActivities) {
+      const template = activityTemplates[Math.floor(Math.random() * activityTemplates.length)];
+      const local = template.local;
+      const capacity = template.capacities[Math.floor(Math.random() * template.capacities.length)];
+      const duration = template.durations[Math.floor(Math.random() * template.durations.length)];
+      const day = days[Math.floor(Math.random() * days.length)];
+  
+      const startsAt = new Date(0);
+      startsAt.setFullYear(2023, 7, days.indexOf(day) + 5);
+      startsAt.setHours(startHour);
+  
+      const endsAt = new Date(startsAt.getTime() + duration * 60 * 60 * 1000);
+  
+      activitiesToCreate.push({
+        local: local,
+        capacity: capacity,
+        name: `Atividade ${day} - ${local}`,
+        startsAt: startsAt,
+        endsAt: endsAt,
+      });
     }
-  
-    const singleCapacityActivity = {
-      local: 'Auditório Principal',
+      activitiesToCreate.push({
+      local: 'Auditório Lateral',
       capacity: 1,
-      name: 'Atividade Especial',
-      startsAt: new Date(0), // Set to epoch time
-      endsAt: new Date(0), // Set to epoch time
-    };  
-    singleCapacityActivity.startsAt.setFullYear(2023, 7, 5); // Assuming August 5th
-    singleCapacityActivity.startsAt.setHours(startHour);
-    singleCapacityActivity.endsAt = new Date(singleCapacityActivity.startsAt.getTime() + 60 * 60 * 1000); // 1 hour duration
-  
-    await prisma.activities.create({
-      data: singleCapacityActivity,
+      name: 'Atividade com Capacidade 1',
+      startsAt: new Date(0),
+      endsAt: new Date(60 * 60 * 1000),
     });
+  
+    for (const activity of activitiesToCreate) {
+      await prisma.activities.create({
+        data: activity,
+      });
+    }
   }
   console.log({ event });
 }
