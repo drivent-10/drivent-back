@@ -19,10 +19,9 @@ async function listHotels(userId: number) {
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
 
   if (!ticket || ticket.status === 'RESERVED') {
-    throw cannotListHotelsError("unpaid");
-  }
-  else if(ticket.TicketType.isRemote || !ticket.TicketType.includesHotel){
-    throw cannotListHotelsError("unavailable");
+    throw cannotListHotelsError('unpaid');
+  } else if (ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+    throw cannotListHotelsError('unavailable');
   }
 }
 type HotelsWithRooms = Hotel & { availability?: number; accommodationType?: string };
@@ -30,7 +29,7 @@ async function getHotels(userId: number) {
   await listHotels(userId);
   const cacheKey = 'hotels';
   const cacheHotels = await redis.get(cacheKey);
-  if(cacheHotels) return JSON.parse(cacheHotels);
+  if (cacheHotels) return JSON.parse(cacheHotels);
 
   const hotels: HotelsWithRooms[] = await hotelRepository.findHotels();
   await Promise.all(
@@ -40,9 +39,9 @@ async function getHotels(userId: number) {
         (await hotelRepository.findHotel(o.id)) -
         bookings.reduce((acc, { _count: { Booking: booking } }) => acc + booking, 0);
       const roomsCapacity = await roomRepository.findAllByHotelId(o.id);
-      const single = roomsCapacity.some((o, i) => o.capacity === 1);
-      const double = roomsCapacity.some((o, i) => o.capacity === 2);
-      const triple = roomsCapacity.some((o, i) => o.capacity === 3);
+      const single = roomsCapacity.some((o) => o.capacity === 1);
+      const double = roomsCapacity.some((o) => o.capacity === 2);
+      const triple = roomsCapacity.some((o) => o.capacity === 3);
       const newArray: string[] = [];
       if (single) newArray.push('Single');
       if (double) newArray.push('Double');
@@ -51,17 +50,16 @@ async function getHotels(userId: number) {
       //exclude(hotels[i], "createdAt", "updatedAt")
     }),
   );
-  await redis.setEx(cacheKey, 30, JSON.stringify(hotels))
+  await redis.setEx(cacheKey, 30, JSON.stringify(hotels));
   return hotels;
 }
 
 type HotelRooms = (Room & { _count: { Booking: number }; availability?: number })[];
 async function getHotelRooms(userId: number, hotelId: number) {
-
   await listHotels(userId);
   const cacheKey = `hotelId=${hotelId}`;
   const cacheRooms = await redis.get(cacheKey);
-  if(cacheRooms) return JSON.parse(cacheRooms);
+  if (cacheRooms) return JSON.parse(cacheRooms);
   const rooms: HotelRooms = await hotelRepository.findBooking(hotelId);
 
   if (!rooms) {
@@ -74,14 +72,14 @@ async function getHotelRooms(userId: number, hotelId: number) {
     }),
   );
 
-  await redis.setEx(cacheKey, 30, JSON.stringify(rooms))
+  await redis.setEx(cacheKey, 30, JSON.stringify(rooms));
   return rooms;
 }
 
 const hotelService = {
   getHotels,
   getHotelRooms,
-  listHotels
+  listHotels,
 };
 
 export default hotelService;

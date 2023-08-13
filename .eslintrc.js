@@ -47,7 +47,7 @@ module.exports = {
   },
   rules: {
     indent: ["error", 2],
-    quotes: ["error", "double"],
+    quotes: ["error", "single"],  // FIXME: change back to double
     semi: ["error", "always"],
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "comma-spacing": ["error", { before: false, after: true }],

@@ -1,8 +1,9 @@
-import { cannotBookingError, notFoundError } from "@/errors";
-import roomRepository from "@/repositories/room-repository";
-import bookingRepository from "@/repositories/booking-repository";
-import enrollmentRepository from "@/repositories/enrollment-repository";
-import tikectRepository from "@/repositories/ticket-repository";
+import { cannotBookingError, notFoundError } from '@/errors';
+import roomRepository from '@/repositories/room-repository';
+import bookingRepository from '@/repositories/booking-repository';
+import enrollmentRepository from '@/repositories/enrollment-repository';
+import tikectRepository from '@/repositories/ticket-repository';
+import hotelRepository from '@/repositories/hotel-repository';
 
 async function checkEnrollmentTicket(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
@@ -11,7 +12,7 @@ async function checkEnrollmentTicket(userId: number) {
   }
   const ticket = await tikectRepository.findTicketByEnrollmentId(enrollment.id);
 
-  if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+  if (!ticket || ticket.status === 'RESERVED' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
     throw cannotBookingError();
   }
 }
@@ -55,14 +56,44 @@ async function changeBookingRoomById(userId: number, roomId: number) {
   return bookingRepository.upsertBooking({
     id: booking.id,
     roomId,
-    userId
+    userId,
   });
+}
+
+async function bookingInfo(userId: number) {
+  const booking = await getBooking(userId);
+  const room = await roomRepository.findById(booking.Room.id);
+  const bookings = await bookingRepository.findByRoomId(booking.Room.id);
+  const hotel = await hotelRepository.findHotelData(room.hotelId);
+
+  let roomSize;
+  switch (room.capacity) {
+    case 1:
+      roomSize = 'Single';
+      break;
+    case 2:
+      roomSize = 'Double';
+      break;
+    case 3:
+      roomSize = 'Triple';
+      break;
+    default:
+      roomSize = 'None';
+  }
+  return {
+    hotelName: hotel.name,
+    hotelImage: hotel.image,
+    roomNumber: room.name,
+    roomSize,
+    roomMessage: 'you alone',
+  };
 }
 
 const bookingService = {
   bookingRoomById,
   getBooking,
   changeBookingRoomById,
+  bookingInfo,
 };
 
 export default bookingService;

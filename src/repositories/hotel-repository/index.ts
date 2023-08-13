@@ -4,6 +4,11 @@ async function findHotels() {
   return prisma.hotel.findMany();
 }
 
+async function findHotelData(hotelId: number) {
+  const { name, image } = await prisma.hotel.findUnique({ where: { id: hotelId } });
+  return { name, image };
+}
+
 async function findHotel(hotelId: number) {
   const hotelRooms = await prisma.room.aggregate({
     _sum: {
@@ -48,6 +53,7 @@ const hotelRepository = {
   findHotel,
   findRoomsByHotelId,
   findBooking,
+  findHotelData,
 };
 
 export default hotelRepository;

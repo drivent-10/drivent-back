@@ -1,7 +1,7 @@
-import { AuthenticatedRequest } from "@/middlewares";
-import { Response } from "express";
-import httpStatus from "http-status";
-import bookingService from "@/services/booking-service";
+import { AuthenticatedRequest } from '@/middlewares';
+import { Response } from 'express';
+import httpStatus from 'http-status';
+import bookingService from '@/services/booking-service';
 
 export async function listBooking(req: AuthenticatedRequest, res: Response) {
   try {
@@ -32,7 +32,7 @@ export async function bookingRoom(req: AuthenticatedRequest, res: Response) {
       bookingId: booking.id,
     });
   } catch (error) {
-    if (error.name === "CannotBookingError") {
+    if (error.name === 'CannotBookingError') {
       return res.sendStatus(httpStatus.FORBIDDEN);
     }
     return res.sendStatus(httpStatus.NOT_FOUND);
@@ -61,10 +61,15 @@ export async function changeBooking(req: AuthenticatedRequest, res: Response) {
       bookingId: booking.id,
     });
   } catch (error) {
-    if (error.name === "CannotBookingError") {
+    if (error.name === 'CannotBookingError') {
       return res.sendStatus(httpStatus.FORBIDDEN);
     }
     return res.sendStatus(httpStatus.NOT_FOUND);
   }
 }
 
+export async function bookingInfo(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+  const bookingData = await bookingService.bookingInfo(userId);
+  res.status(httpStatus.OK).send(bookingData);
+}
