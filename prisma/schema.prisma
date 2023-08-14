@@ -91,6 +91,7 @@ model Ticket {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   Payment      Payment[]
+  Activities   Activities[]     @relation("ActivityTickets")
 }
 
 enum TicketStatus {
@@ -137,4 +138,15 @@ model Booking {
   roomId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+model Activities {
+  id        Int      @id @default(autoincrement())
+  local     String
+  capacity  Int    
+  name     String
+  startsAt DateTime
+  endsAt   DateTime
+  ticket   Ticket[] @relation("ActivityTickets")
 }

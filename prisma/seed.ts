@@ -1,7 +1,8 @@
-import { PrismaClient, Room } from '@prisma/client';
+import { Activities, PrismaClient, Room,  } from '@prisma/client';
 import dayjs from 'dayjs';
 
 const prisma = new PrismaClient();
+
 
 async function main() {
   let event = await prisma.event.findFirst();
@@ -18,7 +19,6 @@ async function main() {
   }
   const ticketType = await prisma.ticketType.findFirst();
   if (!ticketType) {
-    // language=SQL format=false
     await prisma.$queryRaw`
         INSERT INTO "TicketType" (name, price, "isRemote", "includesHotel", "createdAt", "updatedAt")
         VALUES ('Online', 100, true, false, NOW(), NOW()),
@@ -71,6 +71,13 @@ async function main() {
       }
       return rooms;
     }
+  }
+  const user = await prisma.activities.findUnique({
+    where: {id:1}
+  })
+  const findbooking = await prisma.booking.findFirst()
+  if (user && findHotel &&  !findbooking){
+    console.log("oi")
     await prisma.booking.createMany({
       data: [
         { userId: 1, roomId: 20 },
@@ -97,7 +104,76 @@ async function main() {
       ],
     });
   }
+  
+  const activities = await prisma.activities.findFirst()
 
+  if(!activities){
+
+    const activityTemplates = [
+      {
+        local: 'Auditório Lateral',
+        capacities: [20, 30],
+        durations: [1, 1.5, 2],
+      },
+      {
+        local: 'Auditório Principal',
+        capacities: [20, 30],
+        durations: [1, 1.5, 2],
+      },
+      {
+        local: 'Sala de Workshop',
+        capacities: [20],
+        durations: [1, 1.5],
+      },
+    ];
+  
+    const days = ['Friday', 'Saturday', 'Sunday'];
+    const startHour = 9;
+  
+    const maxActivities = 12;
+    const activitiesToCreate: {
+      local: string;
+      capacity: number;
+      name: string;
+      startsAt: Date;
+      endsAt: Date;
+    }[] = [];
+  
+    while (activitiesToCreate.length < maxActivities) {
+      const template = activityTemplates[Math.floor(Math.random() * activityTemplates.length)];
+      const local = template.local;
+      const capacity = template.capacities[Math.floor(Math.random() * template.capacities.length)];
+      const duration = template.durations[Math.floor(Math.random() * template.durations.length)];
+      const day = days[Math.floor(Math.random() * days.length)];
+  
+      const startsAt = new Date(0);
+      startsAt.setFullYear(2023, 7, days.indexOf(day) + 5);
+      startsAt.setHours(startHour);
+  
+      const endsAt = new Date(startsAt.getTime() + duration * 60 * 60 * 1000);
+  
+      activitiesToCreate.push({
+        local: local,
+        capacity: capacity,
+        name: `Atividade ${day} - ${local}`,
+        startsAt: startsAt,
+        endsAt: endsAt,
+      });
+    }
+      activitiesToCreate.push({
+      local: 'Auditório Lateral',
+      capacity: 1,
+      name: 'Atividade com Capacidade 1',
+      startsAt: new Date(0),
+      endsAt: new Date(60 * 60 * 1000),
+    });
+  
+    for (const activity of activitiesToCreate) {
+      await prisma.activities.create({
+        data: activity,
+      });
+    }
+  }
   console.log({ event });
 }
 
