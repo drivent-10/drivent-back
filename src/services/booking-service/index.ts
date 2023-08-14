@@ -60,32 +60,30 @@ async function changeBookingRoomById(userId: number, roomId: number) {
   });
 }
 
+function getRoomSize(capacity: number) {
+  if (capacity === 1) return 'Single';
+  if (capacity === 2) return 'Double';
+  return 'Triple';
+}
+
+function getRoomMessage(capacity: number, availability: number) {
+  // TODO:  can't figure out the correct logic for capacity and availability!
+  const diff = capacity - availability;
+  return diff === 1 ? 'Somente você' : `Você e mais ${diff}`;
+}
+
 async function bookingInfo(userId: number) {
   const booking = await getBooking(userId);
   const room = await roomRepository.findById(booking.Room.id);
   const bookings = await bookingRepository.findByRoomId(booking.Room.id);
   const hotel = await hotelRepository.findHotelData(room.hotelId);
 
-  let roomSize;
-  switch (room.capacity) {
-    case 1:
-      roomSize = 'Single';
-      break;
-    case 2:
-      roomSize = 'Double';
-      break;
-    case 3:
-      roomSize = 'Triple';
-      break;
-    default:
-      roomSize = 'None';
-  }
   return {
     hotelName: hotel.name,
     hotelImage: hotel.image,
     roomNumber: room.name,
-    roomSize,
-    roomMessage: 'you alone',
+    roomSize: getRoomSize(room.capacity),
+    roomMessage: getRoomMessage(room.capacity, bookings.length),
   };
 }
 
